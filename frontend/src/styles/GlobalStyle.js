@@ -1,4 +1,5 @@
-import { createGlobalStyle } from 'styled-components'
+import { createGlobalStyle } from "styled-components";
+// 글로벌 스타일
 
 const GlobalStyle = createGlobalStyle`
   * {
@@ -9,10 +10,10 @@ const GlobalStyle = createGlobalStyle`
 
   html, body {
     height: 100%;
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Pretendard';
     font-size: 16px;
-    color: #333333;
-    background-color: #F8F9FA;
+    color: #000000;
+    background-color: #F3F3F3;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -69,6 +70,6 @@ const GlobalStyle = createGlobalStyle`
   ::-webkit-scrollbar-thumb:hover {
     background: #757575;
   }
-`
+`;
 
-export default GlobalStyle
+export default GlobalStyle;

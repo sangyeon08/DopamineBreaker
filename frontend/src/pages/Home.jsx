@@ -49,7 +49,7 @@ const ChartArea = styled.div`
   align-items: flex-end;
   justify-content: space-around;
   height: 260px;
-  gap: 8px;
+  gap: 12px;
   padding: 0 16px 3px 16px;
   position: relative;
   background-image: repeating-linear-gradient(
