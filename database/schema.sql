@@ -5,6 +5,16 @@ CREATE DATABASE IF NOT EXISTS dopamine_breaker CHARACTER SET utf8mb4 COLLATE utf
 
 USE dopamine_breaker;
 
+-- 사용자 테이블
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(80) UNIQUE NOT NULL,
+    email VARCHAR(120) UNIQUE NOT NULL,
+    password_hash VARCHAR(128) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_username (username)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- 스크린타임 테이블
 CREATE TABLE IF NOT EXISTS screen_time (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -52,7 +62,10 @@ CREATE TABLE IF NOT EXISTS achievements (
 -- 사용자 업적 테이블
 CREATE TABLE IF NOT EXISTS user_achievements (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
     achievement_id INT NOT NULL,
     unlocked_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (achievement_id) REFERENCES achievements(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (achievement_id) REFERENCES achievements(id) ON DELETE CASCADE,
+    UNIQUE KEY uq_user_achievement (user_id, achievement_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

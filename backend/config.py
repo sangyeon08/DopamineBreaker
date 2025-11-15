@@ -5,6 +5,7 @@ load_dotenv()
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
+    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or 'jwt-secret-key-for-dev'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Gemini API configuration

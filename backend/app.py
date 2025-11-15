@@ -1,10 +1,15 @@
 from flask import Flask, request
 from flask_cors import CORS
+from flask_bcrypt import Bcrypt
+from flask_jwt_extended import JWTManager
 from config import DevelopmentConfig
 from database import db
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import atexit
+
+bcrypt = Bcrypt()
+jwt = JWTManager()
 
 def create_app(config_class=DevelopmentConfig):
     app = Flask(__name__)
@@ -12,6 +17,8 @@ def create_app(config_class=DevelopmentConfig):
 
     # Initialize extensions
     db.init_app(app)
+    bcrypt.init_app(app)
+    jwt.init_app(app)
 
     cors_origins = app.config.get('CORS_ORIGINS') or '*'
     CORS(app, resources={r"/api/*": {"origins": cors_origins}}, supports_credentials=True)
@@ -42,11 +49,13 @@ def create_app(config_class=DevelopmentConfig):
     from routes.missions import missions_bp
     from routes.statistics import statistics_bp
     from routes.achievements import achievements_bp
+    from routes.auth import auth_bp
 
     app.register_blueprint(screen_time_bp, url_prefix='/api/screen-time')
     app.register_blueprint(missions_bp, url_prefix='/api/missions')
     app.register_blueprint(statistics_bp, url_prefix='/api/statistics')
     app.register_blueprint(achievements_bp, url_prefix='/api/achievements')
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
 
     @app.route('/')
     def index():
