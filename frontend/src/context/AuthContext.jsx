@@ -51,21 +51,27 @@ export const AuthProvider = ({ children }) => {
         throw new Error('No access token');
       }
 
-      // 토큰 저장
+      // 토큰 저장 및 헤더 설정
       localStorage.setItem('token', access_token);
-      setToken(access_token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
 
-      // 사용자 정보 가져오기
+      // 사용자 정보 가져오기 (헤더 명시적으로 추가)
       try {
-        const userResponse = await axios.get(`${API_URL}/auth/me`);
+        const userResponse = await axios.get(`${API_URL}/auth/me`, {
+          headers: {
+            'Authorization': `Bearer ${access_token}`
+          }
+        });
         setUser({
           isAuthenticated: true,
           ...userResponse.data
         });
+        setToken(access_token);
       } catch (err) {
         console.error('사용자 정보를 불러오는데 실패했습니다:', err);
+        // 사용자 정보 로드 실패해도 로그인은 성공으로 처리
         setUser({ isAuthenticated: true, username });
+        setToken(access_token);
       }
 
       return { ok: true };
