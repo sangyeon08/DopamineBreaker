@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { useAuth } from "../context/AuthContext";
 import ProfileImg from "../assets/Profile.png";
@@ -170,6 +171,29 @@ const MissionDescription = styled.p`
   color: #757575;
 `;
 
+const LogoutButton = styled.button`
+  width: 100%;
+  margin-top: 24px;
+  padding: 16px;
+  background-color: #f5f5f5;
+  color: #333333;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background-color: #eeeeee;
+  }
+
+  &:active {
+    transform: scale(0.98);
+    background-color: #e0e0e0;
+  }
+`;
+
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:5001/api";
 
@@ -180,7 +204,8 @@ const tierConfig = {
 };
 
 function Profile() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [medalStats, setMedalStats] = useState({
     bronze: 0,
     silver: 0,
@@ -191,6 +216,11 @@ function Profile() {
   // 사용자 정보 기본값 설정
   const userName = user?.username || "사용자";
   const userId = user?.email || "@user";
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   useEffect(() => {
     const fetchMedals = async () => {
@@ -292,6 +322,7 @@ function Profile() {
             )}
           </MissionList>
         </RecentMissions>
+        <LogoutButton onClick={handleLogout}>로그아웃</LogoutButton>
       </Section>
     </ProfileContainer>
   );
