@@ -76,7 +76,7 @@ def login():
         if user and bcrypt.check_password_hash(user.password_hash, password):
             # 토큰 유효기간 설정 (예: 1일)
             expires = datetime.timedelta(days=1)
-            access_token = create_access_token(identity=user.id, expires_delta=expires)
+            access_token = create_access_token(identity=str(user.id), expires_delta=expires)
             current_app.logger.info(f'로그인 성공: user_id={user.id}, username={username}')
             return jsonify(access_token=access_token), 200
 
@@ -92,8 +92,10 @@ def login():
 def get_current_user():
     """현재 로그인한 사용자 정보 조회"""
     try:
+        current_app.logger.info('사용자 정보 조회 엔드포인트 호출됨')
         user_id = get_jwt_identity()
-        user = UserModel.query.get(user_id)
+        current_app.logger.info(f'JWT에서 추출한 user_id: {user_id}')
+        user = UserModel.query.get(int(user_id))
 
         if not user:
             current_app.logger.warning(f'사용자를 찾을 수 없음: user_id={user_id}')

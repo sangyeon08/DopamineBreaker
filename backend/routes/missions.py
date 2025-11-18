@@ -112,7 +112,9 @@ def complete_preset_mission():
     user_id = None
     try:
         verify_jwt_in_request(optional=True)
-        user_id = get_jwt_identity()
+        identity = get_jwt_identity()
+        if identity:
+            user_id = int(identity)
     except:
         pass
 
@@ -142,7 +144,9 @@ def get_earned_medals():
     user_id = None
     try:
         verify_jwt_in_request(optional=True)
-        user_id = get_jwt_identity()
+        identity = get_jwt_identity()
+        if identity:
+            user_id = int(identity)
     except:
         pass
 
@@ -170,7 +174,9 @@ def get_recent_completed_missions():
     user_id = None
     try:
         verify_jwt_in_request(optional=True)
-        user_id = get_jwt_identity()
+        identity = get_jwt_identity()
+        if identity:
+            user_id = int(identity)
     except:
         pass
 

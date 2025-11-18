@@ -7,7 +7,9 @@ import EunMedal from "../assets/EunMedal.png";
 import GeumMedal from "../assets/GeumMedal.png";
 
 const ProfileContainer = styled.div`
-  margin: 0;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
 `;
 
 const Header = styled.div`
@@ -29,7 +31,7 @@ const ProfileHeader = styled.div`
 const Avatar = styled.img`
   width: 72px;
   height: 72px;
-  border-radius: 50%;
+  border-radius: 50% 0% 0% 50%;
   object-fit: cover;
   margin-right: 16px;
   flex-shrink: 0;
@@ -195,8 +197,8 @@ function Profile() {
       try {
         const response = await fetch(`${API_BASE_URL}/missions/medals`, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         });
         const data = await response.json();
         setMedalStats(data.medals);
@@ -213,11 +215,14 @@ function Profile() {
 
     const fetchRecentMissions = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/missions/recent?limit=5`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        const response = await fetch(
+          `${API_BASE_URL}/missions/recent?limit=5`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
           }
-        });
+        );
         const data = await response.json();
         setRecentMissions(data.missions);
       } catch (error) {
@@ -268,16 +273,20 @@ function Profile() {
                 <MissionItem key={mission.id}>
                   <MissionMedalIcon
                     src={tierConfig[mission.tier]?.medal || DongMedal}
-                    alt={tierConfig[mission.tier]?.label || '메달'}
+                    alt={tierConfig[mission.tier]?.label || "메달"}
                   />
                   <MissionContent>
                     <MissionTitle>{mission.title}</MissionTitle>
-                    <MissionDescription>{mission.description}</MissionDescription>
+                    <MissionDescription>
+                      {mission.description}
+                    </MissionDescription>
                   </MissionContent>
                 </MissionItem>
               ))
             ) : (
-              <MissionDescription style={{ textAlign: 'center', padding: '20px' }}>
+              <MissionDescription
+                style={{ textAlign: "center", padding: "20px" }}
+              >
                 아직 클리어한 미션이 없습니다.
               </MissionDescription>
             )}
