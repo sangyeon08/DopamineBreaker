@@ -12,7 +12,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Gemini API configuration
-    GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY') or 'AIzaSyDEjMJb6iAvb7uUjo-2N5YoqnuqAV1Hwus'
+    GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 
     # CORS configuration
     CORS_HEADERS = 'Content-Type'

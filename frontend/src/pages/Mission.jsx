@@ -265,9 +265,6 @@ function Mission() {
     selectedTier === "all"
       ? missions
       : missions.filter((m) => m.tier === selectedTier);
-  const completedTierMeta = completedMission
-    ? getTierMeta(completedMission.tier)
-    : null;
 
   const handleStartMission = (mission) => {
     setActiveMission(mission);
