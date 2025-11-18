@@ -138,6 +138,7 @@ const SuccessModal = styled.div`
   padding: 48px;
   text-align: center;
   max-width: 400px;
+  margin: 0 16px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   animation: slideUp 0.3s ease-out;
 
@@ -154,10 +155,11 @@ const SuccessModal = styled.div`
 `;
 
 const SuccessImage = styled.img`
-  width: 200px;
-  height: 200px;
+  width: 120px;
+  height: 120px;
   object-fit: contain;
-  margin-bottom: 24px;
+  margin: 0 auto 24px;
+  display: block;
 `;
 
 const SuccessTitle = styled.h2`
@@ -175,7 +177,7 @@ const SuccessMessage = styled.p`
 `;
 
 const SuccessButton = styled.button`
-  background-color: #6c63ff;
+  background-color: #3a6ea5;
   color: white;
   padding: 16px 48px;
   border-radius: 12px;
@@ -184,7 +186,10 @@ const SuccessButton = styled.button`
   transition: all 0.15s ease;
 
   &:hover {
-    background-color: #5a52d5;
+    background-color: #205185;
+  }
+
+  &:active {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(108, 99, 255, 0.3);
   }
@@ -408,13 +413,6 @@ function Mission() {
               <br />
               {completedMission.duration}분 동안 집중하셨네요!
             </SuccessMessage>
-            {completedTierMeta?.medal && (
-              <MedalIcon
-                src={completedTierMeta.medal}
-                alt={`${completedTierMeta.label} 메달`}
-                style={{ margin: "0 auto 24px" }}
-              />
-            )}
             <SuccessButton onClick={handleCloseSuccessModal}>
               확인
             </SuccessButton>

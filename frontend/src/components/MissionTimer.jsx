@@ -21,7 +21,7 @@ const TimerDisplay = styled.div`
   width: 300px;
   height: 300px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6c63ff 0%, #5a52d5 100%);
+  background: linear-gradient(135deg, #3a6ea5 0%, #2b5e95 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -112,7 +112,7 @@ const FocusAlert = styled.div`
 
   h3 {
     font-size: 24px;
-    color: #6c63ff;
+    color: #3a6ea5;
     margin-bottom: 16px;
   }
 
