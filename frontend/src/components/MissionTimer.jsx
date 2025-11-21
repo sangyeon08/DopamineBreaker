@@ -1,5 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
+import {
+  formatTimeToMMSS,
+  getMissionTitle,
+  requestNotificationPermission,
+  sendNotification,
+} from "../utils/helpers";
 
 const TimerContainer = styled.div`
   display: flex;
@@ -11,43 +17,34 @@ const TimerContainer = styled.div`
 `;
 
 const MissionTitle = styled.h2`
-  font-size: 32px;
+  font-size: 28px;
+  margin-top: 24px;
   font-weight: 700;
   color: #333333;
   text-align: center;
 `;
 
 const TimerDisplay = styled.div`
-  width: 300px;
-  height: 300px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #6c63ff 0%, #5a52d5 100%);
+  width: 280px;
+  height: 280px;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-  position: relative;
-
-  &::before {
-    content: "";
-    position: absolute;
-    width: 280px;
-    height: 280px;
-    border-radius: 50%;
-    background-color: #ffffff;
-  }
 `;
 
 const Time = styled.div`
-  font-size: 4rem;
+  font-size: 3.5rem;
   font-weight: 700;
   color: #333333;
   z-index: 1;
   font-variant-numeric: tabular-nums;
+  position: absolute;
 `;
 
 const MissionDescription = styled.p`
   font-size: 18px;
+  margin-top: 12px;
   color: #757575;
   text-align: center;
   max-width: 500px;
@@ -57,43 +54,39 @@ const MissionDescription = styled.p`
 const ButtonGroup = styled.div`
   display: flex;
   gap: 24px;
+  margin-top: 24px;
 `;
 
 const Button = styled.button`
-  padding: 16px 48px;
-  border-radius: 12px;
-  font-size: 18px;
+  padding: 14px 40px;
+  border-radius: 8px;
+  font-size: 16px;
   font-weight: 600;
-  transition: all 0.15s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
+  transition: opacity 0.2s ease;
 `;
 
 const CancelButton = styled(Button)`
-  background-color: #ffffff;
+  background-color: #f5f5f5;
   color: #333333;
-  border: 2px solid #e0e0e0;
+  border: none;
 
   &:hover {
-    border-color: #757575;
+    opacity: 0.8;
   }
 `;
 
 const CompleteButton = styled(Button)`
-  background-color: #4caf50;
+  background-color: #3a6ea5;
   color: white;
+  border: none;
 
   &:hover {
-    background-color: #45a049;
+    opacity: 0.9;
   }
 
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
-    transform: none;
   }
 `;
 
@@ -103,7 +96,7 @@ const FocusAlert = styled.div`
   left: 50%;
   transform: translate(-50%, -50%);
   background-color: #ffffff;
-  padding: 48px;
+  padding: 42px 48px;
   border-radius: 16px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
   text-align: center;
@@ -112,12 +105,13 @@ const FocusAlert = styled.div`
 
   h3 {
     font-size: 24px;
-    color: #6c63ff;
+    color: #3a6ea5;
     margin-bottom: 16px;
   }
 
   p {
-    font-size: 18px;
+    font-size: 16px;
+    line-height: 1.5;
     color: #757575;
   }
 `;
@@ -134,63 +128,94 @@ const Overlay = styled.div`
 `;
 
 function MissionTimer({ mission, onComplete, onCancel }) {
-  const [timeLeft, setTimeLeft] = useState(mission.duration * 60); // 초 단위로 변환
+  const [timeLeft, setTimeLeft] = useState(mission.duration * 60);
   const [isCompleted, setIsCompleted] = useState(false);
   const [showFocusAlert, setShowFocusAlert] = useState(false);
   const intervalRef = useRef(null);
-  const missionTitle = mission.title || mission.description || "미션";
+  const alertTimeoutRef = useRef(null);
+  // visibility 이벤트 핸들러에서 stale closure 문제를 방지하기 위해 ref 사용
+  const isPausedRef = useRef(false);
+  const missionTitle = getMissionTitle(mission);
+  const totalTime = mission.duration * 60;
 
   useEffect(() => {
-    // 타이머 시작
-    intervalRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(intervalRef.current);
-          setIsCompleted(true);
-          // 브라우저 알림
-          if (
-            "Notification" in window &&
-            Notification.permission === "granted"
-          ) {
-            new Notification("미션 완료!", {
-              body: `${missionTitle} 미션을 완료했습니다!`,
-              icon: "/icon.png",
-            });
+    requestNotificationPermission();
+
+    const startTimer = () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+
+      intervalRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+            setIsCompleted(true);
+            sendNotification(
+              "미션 완료!",
+              `${missionTitle} 미션을 완료했습니다!`
+            );
+            return 0;
           }
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+          return prev - 1;
+        });
+      }, 1000);
+    };
 
-    // 알림 권한 요청
-    if ("Notification" in window && Notification.permission === "default") {
-      Notification.requestPermission();
-    }
+    const clearAlertTimer = () => {
+      if (alertTimeoutRef.current) {
+        clearTimeout(alertTimeoutRef.current);
+        alertTimeoutRef.current = null;
+      }
+    };
 
-    // 페이지 이탈 감지
+    // 탭 전환 감지: 사용자가 다른 탭으로 이동하면 타이머 일시정지, 돌아오면 재개
     const handleVisibilityChange = () => {
-      if (document.hidden && !isCompleted) {
+      if (document.hidden) {
+        // 탭 이탈 시 타이머 일시정지
+        setIsCompleted((currentCompleted) => {
+          if (!currentCompleted) {
+            if (intervalRef.current) {
+              clearInterval(intervalRef.current);
+              intervalRef.current = null;
+            }
+            isPausedRef.current = true;
+            clearAlertTimer();
+          }
+          return currentCompleted;
+        });
         setShowFocusAlert(true);
-        setTimeout(() => setShowFocusAlert(false), 3000);
+      } else {
+        // 탭 복귀 시 타이머 재개 및 1.5초간 집중 알림 표시
+        setIsCompleted((currentCompleted) => {
+          if (!currentCompleted && isPausedRef.current) {
+            isPausedRef.current = false;
+            clearAlertTimer();
+            startTimer();
+
+            alertTimeoutRef.current = setTimeout(() => {
+              setShowFocusAlert(false);
+              alertTimeoutRef.current = null;
+            }, 1500);
+          } else if (alertTimeoutRef.current === null && !isPausedRef.current) {
+            setShowFocusAlert(false);
+          }
+          return currentCompleted;
+        });
       }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    startTimer();
 
     return () => {
       clearInterval(intervalRef.current);
+      clearAlertTimer();
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [missionTitle, isCompleted]);
-
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs
-      .toString()
-      .padStart(2, "0")}`;
-  };
+  }, [missionTitle]);
 
   const handleComplete = () => {
     clearInterval(intervalRef.current);
@@ -202,13 +227,40 @@ function MissionTimer({ mission, onComplete, onCancel }) {
     onCancel();
   };
 
+  // SVG 원형 프로그레스바 계산: 경과 시간에 따라 원의 둘레를 채워나감
+  const progress = ((totalTime - timeLeft) / totalTime) * 100;
+  const circumference = 2 * Math.PI * 130;
+  const strokeDashoffset = circumference - (progress / 100) * circumference;
+
   return (
     <>
       <TimerContainer>
         <MissionTitle>{missionTitle}</MissionTitle>
 
         <TimerDisplay>
-          <Time>{formatTime(timeLeft)}</Time>
+          <svg width="280" height="280" style={{ transform: "rotate(-90deg)" }}>
+            <circle
+              cx="140"
+              cy="140"
+              r="130"
+              fill="none"
+              stroke="#e0e0e0"
+              strokeWidth="20"
+            />
+            <circle
+              cx="140"
+              cy="140"
+              r="130"
+              fill="none"
+              stroke="#3a6ea5"
+              strokeWidth="20"
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              strokeLinecap="round"
+              style={{ transition: "stroke-dashoffset 1s linear" }}
+            />
+          </svg>
+          <Time>{formatTimeToMMSS(timeLeft)}</Time>
         </TimerDisplay>
 
         <MissionDescription>{mission.description}</MissionDescription>
@@ -224,6 +276,7 @@ function MissionTimer({ mission, onComplete, onCancel }) {
       <Overlay show={showFocusAlert} />
       <FocusAlert show={showFocusAlert}>
         <h3>집중 모드 중입니다!</h3>
+        <p>화면을 이탈하면 타이머가 흐르지 않아요</p>
         <p>앱으로 다시 돌아와주세요</p>
       </FocusAlert>
     </>

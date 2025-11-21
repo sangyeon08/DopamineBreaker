@@ -1,0 +1,14 @@
+{
+  "include": [
+    "**/*.py"
+  ],
+  "exclude": [
+    "**/__pycache__",
+    "**/node_modules"
+  ],
+  "pythonVersion": "3.13",
+  "pythonPlatform": "Darwin",
+  "typeCheckingMode": "off",
+  "reportMissingImports": false,
+  "reportMissingModuleSource": false
+}

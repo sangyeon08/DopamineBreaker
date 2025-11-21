@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-import DongMedal from "../assets/DongMedal.png";
-import EunMedal from "../assets/EunMedal.png";
-import GeumMedal from "../assets/GeumMedal.png";
+import { useAuth } from "../context/AuthContext";
+import { TIER_CONFIG } from "../constants";
+import { formatTime } from "../utils/helpers";
+import { missionApi } from "../services/api";
 
 const HomeContainer = styled.div`
   max-width: 480px;
@@ -12,15 +13,12 @@ const HomeContainer = styled.div`
   padding-bottom: 24px;
 `;
 
-const Header = styled.div`
+const PageTitle = styled.h1`
   margin-top: 32px;
-`;
-
-const Greeting = styled.h1`
+  padding: 0 0 28px 0;
   font-size: 24px;
   font-weight: 700;
   color: #000000;
-  margin-bottom: 28px;
   line-height: 1.4;
 `;
 
@@ -44,6 +42,7 @@ const ViewAllButton = styled.button`
   font-size: 28px;
   color: #333333;
   cursor: pointer;
+  padding-right: 8px;
 `;
 
 const Section = styled.section`
@@ -178,18 +177,10 @@ const MedalIcon = styled.img`
   object-fit: contain;
 `;
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:5001/api";
-
-const tierConfig = {
-  bronze: { label: "브론즈", medal: DongMedal },
-  silver: { label: "실버", medal: EunMedal },
-  gold: { label: "골드", medal: GeumMedal },
-};
-
 function Home() {
   const navigate = useNavigate();
-  const [userName] = useState("사용자");
+  const { user } = useAuth();
+  const userName = user?.username || "사용자";
   const [currentDate, setCurrentDate] = useState("");
   const [usageData, setUsageData] = useState({
     categories: [],
@@ -197,14 +188,9 @@ function Home() {
   const [quickMissions, setQuickMissions] = useState([]);
 
   useEffect(() => {
-    // 현재 날짜 설정
     const date = new Date();
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    setCurrentDate(`${month}월 ${day}일`);
+    setCurrentDate(`${date.getMonth() + 1}월 ${date.getDate()}일`);
 
-    // TODO: API에서 사용 기록 가져오기
-    // 임시 데이터
     setUsageData({
       categories: [
         { name: "엔터테인먼트", time: 150, color: "#0B84FF" },
@@ -213,16 +199,10 @@ function Home() {
       ],
     });
 
-    // 미션 데이터 가져오기
     const fetchMissions = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/missions/presets`);
-        if (response.ok) {
-          const data = await response.json();
-          const missions = Array.isArray(data) ? data : data.missions;
-          // 최대 4개만 가져오기
-          setQuickMissions(missions.slice(0, 4));
-        }
+        const data = await missionApi.getPresets();
+        setQuickMissions(data.slice(0, 4));
       } catch (error) {
         console.error("미션을 불러오지 못했습니다:", error);
       }
@@ -235,21 +215,13 @@ function Home() {
     navigate("/mission", { state: { autoStartMission: mission } });
   };
 
-  const formatTime = (minutes) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours > 0 ? `${hours}시간 ${mins}분` : `${mins}분`;
-  };
-
   return (
     <HomeContainer>
-      <Header>
-        <Greeting>
-          {userName}님<br />
-          잠시 쉬어가볼까요?
-        </Greeting>
-        <SectionTitle>{currentDate} 사용 내용</SectionTitle>
-      </Header>
+      <PageTitle>
+        {userName}님<br />
+        잠시 쉬어가볼까요?
+      </PageTitle>
+      <SectionTitle>{currentDate} 사용 내용</SectionTitle>
 
       <Section>
         <UsageCard>
@@ -277,14 +249,16 @@ function Home() {
 
       <Section>
         <SectionHeader>
-          <SectionTitle style={{ marginBottom: 0 }}>오늘의 미션</SectionTitle>
+          <SectionTitle style={{ marginBottom: 0, paddingLeft: "4px" }}>
+            오늘의 미션
+          </SectionTitle>
           <ViewAllButton onClick={() => navigate("/mission")}>
             {">"}
           </ViewAllButton>
         </SectionHeader>
         <MissionGrid>
           {quickMissions.map((mission) => {
-            const tierMeta = tierConfig[mission.tier];
+            const tierMeta = TIER_CONFIG[mission.tier];
             return (
               <MissionCardSmall
                 key={mission.id}

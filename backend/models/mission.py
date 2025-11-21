@@ -2,17 +2,17 @@ from datetime import datetime
 from database import db
 
 class Mission(db.Model):
+    """미션 모델"""
     __tablename__ = 'missions'
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
-    duration = db.Column(db.Integer, nullable=False)  # 분 단위
-    difficulty = db.Column(db.String(20))  # easy, medium, hard
-    category = db.Column(db.String(50))  # physical, mental, health
+    duration = db.Column(db.Integer, nullable=False)
+    difficulty = db.Column(db.String(20))
+    category = db.Column(db.String(50))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Relationship
     records = db.relationship('MissionRecord', backref='mission', lazy=True)
 
     def __repr__(self):
@@ -31,16 +31,21 @@ class Mission(db.Model):
 
 
 class MissionRecord(db.Model):
+    """미션 완료 기록 모델"""
     __tablename__ = 'mission_records'
 
     id = db.Column(db.Integer, primary_key=True)
+    # nullable=True: 비로그인 사용자 미션 기록 지원
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     mission_id = db.Column(db.Integer, db.ForeignKey('missions.id'), nullable=True)
-    preset_mission_id = db.Column(db.Integer, nullable=True)  # 프리셋 미션 ID
-    tier = db.Column(db.String(20), nullable=True)  # bronze, silver, gold
-    title = db.Column(db.String(100), nullable=True)  # 프리셋 미션 제목
-    description = db.Column(db.Text, nullable=True)  # 프리셋 미션 설명
+    # 일일 프리셋 미션의 경우 preset_mission_id 사용
+    preset_mission_id = db.Column(db.Integer, nullable=True)
+    tier = db.Column(db.String(20), nullable=True)
+    title = db.Column(db.String(100), nullable=True)
+    description = db.Column(db.Text, nullable=True)
     completed_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
-    actual_duration = db.Column(db.Integer)  # 실제 소요 시간 (분)
+    # actual_duration=0: 실패/취소된 미션, >0: 완료된 미션
+    actual_duration = db.Column(db.Integer)
     notes = db.Column(db.Text)
 
     def __repr__(self):
@@ -54,6 +59,7 @@ class MissionRecord(db.Model):
             'tier': self.tier,
             'title': self.title,
             'description': self.description,
+            # 연관된 미션 정보가 있으면 포함 (커스텀 미션의 경우)
             'mission': self.mission.to_dict() if self.mission else None,
             'completed_at': self.completed_at.isoformat() if self.completed_at else None,
             'actual_duration': self.actual_duration,
